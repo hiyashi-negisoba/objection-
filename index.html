@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OBJECTION! Lawyer Agents Mitigate Guilty Bias in Legal Judgment Prediction</title>
+<meta name="description" content="OBJECTION: an inference-time pipeline that integrates an Adversarial Lawyer Agent into 3-step legal reasoning to mitigate Guilty Bias in Legal Judgment Prediction. EMNLP 2026 Main.">
+<meta name="keywords" content="Legal Judgment Prediction, LJP, guilty bias, presumption of innocence, lawyer agent, adversarial reasoning, LLM, EMNLP 2026">
+<meta property="og:title" content="OBJECTION! Lawyer Agents Mitigate Guilty Bias in Legal Judgment Prediction">
+<meta property="og:description" content="An Adversarial Lawyer Agent reduces the False Guilty Rate from 82.93% to 16.69% on real-world acquittals, without extra training.">
+<meta property="og:image" content="static/images/fig1_overview.png">
+<link rel="icon" type="image/png" href="static/images/lawyer_title.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Serif:wght@400;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+:root{
+  --navy:#0B1A6B; --navy-2:#16288A; --ink:#1B1F2A; --muted:#5B6275; --line:#E3E6EE;
+  --bg:#FFFFFF; --soft:#F5F7FB; --blue-soft:#E8F0FB; --amber-soft:#FFF4E0;
+  --red:#B8202A; --green:#138A3E; --highlight:#E4ECFF;
+}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans",system-ui,sans-serif;font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:var(--navy-2)}
+img{max-width:100%;display:block}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+
+/* ---------- Hero ---------- */
+.hero{background:var(--navy);color:#fff;padding:56px 0 44px;text-align:center}
+.hero .logo{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:6px}
+.hero .logo img{height:72px;width:auto}
+.hero .logo span{font-size:46px;font-weight:800;letter-spacing:.5px}
+.hero h1{font-size:30px;font-weight:700;line-height:1.3;margin:0 auto 22px;max-width:780px}
+.authors{font-size:19px;font-weight:600;margin-bottom:4px}
+.authors a{color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.35)}
+.affil{font-size:15.5px;opacity:.9}
+.note{font-size:13.5px;opacity:.75;margin-top:4px}
+.venue{display:inline-block;margin-top:18px;padding:5px 16px;border-radius:999px;background:#fff;color:var(--navy);font-weight:700;font-size:15px}
+.buttons{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:22px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 20px;border-radius:999px;background:#1C1F27;color:#fff;text-decoration:none;font-weight:600;font-size:15px;border:1px solid rgba(255,255,255,.18)}
+.btn:hover{background:#000}
+.btn svg{width:17px;height:17px;fill:currentColor}
+
+/* ---------- Sections ---------- */
+section{padding:44px 0 8px}
+h2{font-size:27px;font-weight:800;text-align:center;margin:0 0 22px;color:var(--navy)}
+h3{font-size:19px;font-weight:700;margin:28px 0 8px}
+p{margin:0 0 14px}
+.lead{font-size:18px}
+mark{background:var(--highlight);color:inherit;padding:0 3px;border-radius:3px}
+
+.tldr{background:var(--soft);border-left:5px solid var(--navy);border-radius:10px;padding:18px 22px;margin:34px 0 4px}
+.tldr b:first-child{color:var(--navy)}
+.abstract{text-align:justify}
+
+figure{margin:22px 0 10px}
+figure img{border-radius:10px;border:1px solid var(--line);margin:0 auto}
+figcaption{font-size:14.5px;color:var(--muted);margin-top:10px;line-height:1.55}
+figure.narrow img{max-width:520px}
+
+/* quote */
+.quote{font-family:"Noto Serif",serif;font-style:italic;font-size:22px;text-align:center;margin:8px auto 4px;max-width:760px}
+.quote-by{text-align:center;color:var(--muted);font-size:14.5px;margin-bottom:22px}
+
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 18px}
+.vs div{border-radius:12px;padding:18px 20px;text-align:center}
+.vs .human{background:var(--blue-soft)}
+.vs .llm{background:#FCE9EA}
+.vs small{display:block;color:var(--muted);font-size:13.5px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.vs strong{font-size:21px}
+.vs .llm strong{color:var(--red)}
+
+.def{border:1px solid var(--line);border-radius:12px;padding:14px 20px;background:#fff}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:18px 0}
+.step{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:#fff}
+.step .num{display:inline-block;font-size:12.5px;font-weight:700;color:#fff;background:var(--navy);border-radius:6px;padding:1px 8px;margin-bottom:6px}
+.step h4{margin:0 0 4px;font-size:16.5px}
+.step p{margin:0;font-size:15.5px;color:#333}
+
+.eq{background:var(--soft);border-radius:12px;padding:16px 20px;margin:14px 0}
+.eq table{border-collapse:collapse;width:100%}
+.eq td{padding:6px 8px;vertical-align:middle}
+.eq td:last-child{color:var(--muted);font-size:15px}
+
+.objection{display:grid;grid-template-columns:90px 1fr 90px;align-items:center;gap:14px;margin:26px 0 6px}
+.objection img{width:90px;height:auto;image-rendering:pixelated}
+.objection .flip{transform:scaleX(-1)}
+.bubble{border:2px solid var(--ink);border-radius:16px;padding:16px 22px;font-size:17px;text-align:center;background:#fff}
+.bubble em{font-style:italic}
+.bubble .idpr{color:var(--navy-2);font-weight:700}
+
+/* dataset */
+.dataset{display:grid;grid-template-columns:1fr;gap:22px}
+.dataset .card{display:grid;grid-template-columns:200px 1fr;gap:6px 28px;align-items:start}
+.dataset .card .head{grid-column:1/-1}
+.card{border:1px solid var(--line);border-radius:14px;padding:20px 22px;background:#fff}
+.badge{display:inline-block;background:var(--navy);color:#fff;font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px;margin-right:6px;vertical-align:2px}
+.big{font-size:40px;font-weight:800;color:var(--navy);line-height:1.1}
+.bars{margin:14px 0 4px}
+.bar{display:grid;grid-template-columns:118px 1fr 52px;align-items:center;gap:10px;font-size:14.5px;margin:7px 0}
+.bar .track{height:12px;background:var(--soft);border-radius:6px;overflow:hidden}
+.bar .fill{height:100%;background:var(--navy-2);border-radius:6px}
+.bar span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.fine{font-size:13.5px;color:var(--muted)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0 26px}
+.stat{background:var(--soft);border-radius:14px;padding:20px 18px;text-align:center}
+.stat .v{font-size:32px;font-weight:800;color:var(--navy);line-height:1.15}
+.stat .v s{color:var(--muted);font-weight:600;text-decoration:none;font-size:24px}
+.stat .l{font-size:14.5px;color:var(--muted);margin-top:6px}
+
+/* tables */
+.tbl{overflow-x:auto;margin:10px 0 6px}
+table.res{border-collapse:collapse;width:100%;font-size:15.5px;font-variant-numeric:tabular-nums}
+table.res th,table.res td{padding:8px 10px;text-align:center;white-space:nowrap}
+table.res th:first-child,table.res td:first-child{text-align:left}
+table.res thead tr:first-child th{border-top:2px solid var(--ink)}
+table.res thead tr:last-child th{border-bottom:1px solid var(--ink)}
+table.res tbody tr:last-child td{border-bottom:2px solid var(--ink)}
+table.res .grp{border-bottom:1px solid #9aa0ad}
+table.res .ours td{background:var(--blue-soft);font-weight:600;border-top:1px solid var(--ink)}
+table.res .nat{background:var(--amber-soft)}
+table.res .ours td.nat{background:#E9E6EC}
+.tnote{font-size:13.5px;color:var(--muted);margin:6px 0 0}
+.takeaway{border-left:4px solid var(--navy);padding:4px 0 4px 14px;margin:14px 0 6px;font-size:16px}
+
+.analysis{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+.analysis figure img{border:none;max-width:min(400px,100%)}
+ul.tight{margin:6px 0 0;padding-left:20px}
+ul.tight li{margin:3px 0}
+
+.contrib{list-style:none;padding:0;margin:0}
+.contrib li{border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:10px 0}
+.contrib b{color:var(--navy)}
+.closing{text-align:center;font-family:"Noto Serif",serif;font-style:italic;font-size:18px;margin:22px auto 0;max-width:760px}
+
+pre{position:relative;background:#1C1F27;color:#E6E8EE;border-radius:12px;padding:18px 20px;overflow-x:auto;font:14px/1.6 "JetBrains Mono",monospace}
+.copy{position:absolute;top:10px;right:10px;background:#343846;color:#fff;border:0;border-radius:8px;padding:5px 12px;font:600 13px "Noto Sans",sans-serif;cursor:pointer}
+.copy:hover{background:#4a4f60}
+
+footer{margin-top:48px;padding:26px 0 40px;border-top:1px solid var(--line);text-align:center;font-size:14px;color:var(--muted)}
+
+@media (max-width:760px){
+  body{font-size:16px}
+  .hero{padding:40px 0 34px}
+  .hero .logo span{font-size:36px}
+  .hero .logo img{height:50px}
+  .hero h1{font-size:23px}
+  .vs,.steps,.dataset,.stats,.analysis,.dataset .card{grid-template-columns:1fr}
+  .analysis>div{min-width:0}
+  .buttons .btn{padding:8px 16px}
+  .objection{grid-template-columns:56px 1fr 56px;gap:8px}
+  .objection img{width:56px}
+  .bubble{font-size:15px;padding:12px 14px}
+  h2{font-size:23px}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="logo"><img src="static/images/lawyer_title.png" alt=""><span>OBJECTION!</span></div>
+    <h1>Lawyer Agents Mitigate Guilty Bias in Legal Judgment Prediction</h1>
+    <div class="authors">Jaehoon Jeong<sup>1,2</sup>, &nbsp;Jay-Yoon Lee<sup>1*</sup></div>
+    <div class="affil"><sup>1</sup>Graduate School of Data Science, Seoul National University &nbsp;·&nbsp; <sup>2</sup>Korean National Police Agency, South Korea</div>
+    <div class="note">*Corresponding author</div>
+    <div class="venue">EMNLP 2026 Main</div>
+    <div class="buttons">
+      <a class="btn" href="https://arxiv.org/abs/2609.02158" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M4 2h11l5 5v15H4V2zm10 1.5V8h4.5L14 3.5zM7 12h10v1.6H7V12zm0 3.4h10V17H7v-1.6zm0-6.8h5v1.6H7V8.6z"/></svg>arXiv</a>
+      <a class="btn" href="https://arxiv.org/pdf/2609.02158" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg>PDF</a>
+      <a class="btn" href="https://huggingface.co/datasets/Kcsp0042/natural-innocent" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M12 3c4.4 0 8 1.3 8 3v12c0 1.7-3.6 3-8 3s-8-1.3-8-3V6c0-1.7 3.6-3 8-3zm0 2C8.2 5 6 6 6 6.5S8.2 8 12 8s6-1 6-1.5S15.8 5 12 5zm6 3.8C16.6 9.6 14.4 10 12 10s-4.6-.4-6-1.2V12c0 .5 2.2 1.5 6 1.5s6-1 6-1.5V8.8zm0 5.6c-1.4.7-3.6 1.1-6 1.1s-4.6-.4-6-1.1V18c0 .5 2.2 1.5 6 1.5s6-1 6-1.5v-3.6z"/></svg>Dataset</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+
+  <section>
+    <h2>Abstract</h2>
+    <div class="abstract">
+      <p>Legal Judgment Prediction (LJP) models are typically trained on documents that describe facts from a prosecutorial perspective. Existing datasets further exhibit severe label imbalance toward guilty outcomes. Consequently, these models suffer from &ldquo;Guilty Bias&rdquo;, blindly accepting the prosecution&rsquo;s narrative as objective truth. Previous studies employing three-step reasoning structures or training on synthetically generated innocence data improve overall accuracy, but they still fail to mitigate bias at inference time.</p>
+      <p>In this paper, we introduce OBJECTION, an inference-time pipeline that integrates an Adversarial Lawyer Agent into each 3-step reasoning of offense, unlawfulness, and culpability. Unlike generic critics, our agent actively challenges the model&rsquo;s presumptions of guilt by injecting legal defense arguments at each reasoning stage. To thoroughly evaluate this, we present a new &ldquo;Natural Innocent&rdquo; dataset including 3.4k real-world cases, overcoming the limitations of synthetic innocence benchmarks. Test results show that OBJECTION drastically reduces the False Guilty Rate (FGR) from 82.93% (SOTA baseline) to 16.69%, proving its capability to perform substantive legal reasoning. This work denotes a key progress toward aligning Legal AI with the presumption of innocence, a universally recognized principle enshrined in modern criminal law.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Guilty-biased LLMs (Introduction)</h2>
+    <h3>Criminal procedure is not neutral by design</h3>
+    <p class="lead">Fact descriptions in criminal judgments are not neutral event summaries, <mark>but prosecutorial narratives written to justify guilt.</mark></p>
+    <p>Public legal corpora for LJP consist of exactly this content, with severe label imbalance toward guilty outcomes. As a result, LJP models are inherently biased: they accept the prosecution's narrative as objective truth — <b>the Guilty Bias.</b></p>
+    <figure>
+      <img src="static/images/fig1_overview.png" alt="Comparative overview of LJP paradigms: existing methods (A)-(D) versus OBJECTION (II)">
+      <figcaption>Comparative overview of LJP paradigms. FGR(↓) and FNR(↓) denote False Guilty Rate and False Not-Guilty Rate, respectively. Green arrow denotes improvements, while the reds denote degradations. Existing methods (A)–(D) suffer from guilty bias from fixed architectures. In contrast, (II) OBJECTION (Ours) employs a Lawyer Agent to actively dispute assumptions, efficiently mitigating bias while maintaining reasoning quality. The further reasoning round (e.g., Round 3) is skipped when a former legal doubt (e.g., Self-defense in Round 2) is established.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Why this problem is critical (in real-world)?</h2>
+    <p class="quote">&ldquo;It is better that ten guilty persons escape than that one innocent suffer.&rdquo;</p>
+    <p class="quote-by">— W. Blackstone</p>
+    <h3>Presumption of Innocence</h3>
+    <div class="vs">
+      <div class="human"><small>Human expert</small><strong>&ldquo;When in doubt, acquit.&rdquo;</strong></div>
+      <div class="llm"><small>Guilty-biased LLM</small><strong>&ldquo;When in doubt, convict.&rdquo;</strong> — <mark>Exactly the opposite.</mark></div>
+    </div>
+    <h3>Bias Metric</h3>
+    <div class="def">
+      <ul class="tight" style="margin:0"><li>False Guilty Rate (FGR) $= FP/(TN+FP)$: The rate at which the innocent are declared guilty.</li><li>On real-world acquittal cases, even a fine-tuned SOTA model reaches an <mark>FGR of 82.93%.</mark></li></ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>About OBJECTION! (Methodology)</h2>
+    <h3>Detail of the Pipeline</h3>
+    <p><b>Inference-time</b> — a single LLM plays two roles: Judge ($\mathcal{M}$) and Lawyer ($\mathcal{A}$).</p>
+    <figure>
+      <img src="static/images/fig2_pipeline.png" alt="Detailed decision flow of the OBJECTION pipeline on a self-defense case">
+      <figcaption>Detailed decision flow of the OBJECTION pipeline, illustrated with a self-defense case. The Lawyer Agent overturns the initial biased judgment in Round 2 by highlighting exculpatory details (e.g., imminence), triggering the early-exit mechanism for acquittal. This adversarial intervention effectively neutralizes narrative bias, reducing the False Guilty Rate (FGR) from 82.93% to 16.69% on the Natural Innocent dataset.</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step"><span class="num">Step 1</span><h4>Input decomposition as a schema (Schema-based IE)</h4><p>Subject, Object, Actus Reus, Mens Rea as a structured factual anchor.</p></div>
+      <div class="step"><span class="num">Step 2</span><h4>3-Step Reasoning</h4><p>Offense → Unlawfulness → Culpability</p></div>
+      <div class="step"><span class="num">Step 2-1</span><h4>Adversarial Lawyer Agent</h4><p>At each step, the Judge's initial judgment is challenged with defense arguments<br>The Judge must re-evaluate conditioned on them.</p></div>
+      <div class="step"><span class="num">Step 3</span><h4>Early Exit</h4><p>Once a stage is negated, the case is acquitted immediately with a granular label.<br>(e.g., Innocent by Unlawfulness)</p></div>
+    </div>
+
+    <div class="eq">
+      <table>
+        <tr><td>$j_k = \mathcal{M}(X_{fact})$</td><td>The Judge's initial judgment</td></tr>
+        <tr><td>$d_k = \mathcal{A}(j_k, X_{fact})$</td><td>Lawyer Agent's defense</td></tr>
+        <tr><td>$\hat{y}_k = \mathcal{M}(j_k, d_k, X_{fact})$</td><td>The Judge's final decision</td></tr>
+      </table>
+    </div>
+
+    <div class="objection">
+      <img class="flip" src="static/images/lawyer.png" alt="Lawyer">
+      <div class="bubble">The Lawyer does not ask <em>&ldquo;Is the reasoning sound?&rdquo;</em><br>but <em>&ldquo;Is there any room for reasonable doubt?&rdquo;</em> — <span class="idpr"><em>In Dubio Pro Reo.</em></span></div>
+      <img src="static/images/prosecutor.png" alt="Prosecutor">
+    </div>
+  </section>
+
+  <section>
+    <h2>[NEW] Natural Innocent Dataset</h2>
+    <div class="dataset">
+      <div class="card">
+        
+        <div><div class="big" style="margin-top:8px">3,412</div>
+        <div class="fine" style="margin-bottom:6px">real-world Korean criminal judgments — <b>no synthetic rewriting.</b></div></div>
+        <div><div class="bars" style="margin-top:8px">
+          <div class="bar"><span>Guilty</span><div class="track"><div class="fill" style="width:37.8%;background:#9AA0AD"></div></div><span>1,291</span></div>
+          <div class="bar"><span>Offense</span><div class="track"><div class="fill" style="width:42.9%"></div></div><span>1,464</span></div>
+          <div class="bar"><span>Unlawfulness</span><div class="track"><div class="fill" style="width:12.6%"></div></div><span>431</span></div>
+          <div class="bar"><span>Culpability</span><div class="track"><div class="fill" style="width:6.6%"></div></div><span>226</span></div>
+        </div>
+        </div>
+        <p class="fine head" style="margin-top:10px;margin-bottom:12px">2,121 acquittals* (Offense 1,464 · Unlawfulness 431 · Culpability 226)<br>* Stage labels verified by a police investigator · public, de-identified records</p>
+        <div class="head"><a class="btn" style="background:var(--navy)" href="https://huggingface.co/datasets/Kcsp0042/natural-innocent" target="_blank" rel="noopener">View on Hugging Face</a></div>
+      </div>
+      <figure style="margin:0">
+        <img style="max-width:min(820px,100%)" src="static/images/synthetic_vs_natural.png" alt="Synthetic versus Natural Innocent narratives">
+        <figcaption>Comparison of Synthetic vs. Natural Innocent narratives. <b>(Left)</b> Synthetic cases usually contain forced, <b>implausible scenarios with explicit exculpatory cues</b>, risking shortcut learning. <b>(Right)</b> Natural Innocent cases present realistic, logical narratives where innocence must be <i>inferred</i> from implicit contextual details (e.g., incidental injury during self-defense), requiring genuine legal reasoning.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Experiments &amp; Analysis</h2>
+    <h3 style="margin-top:0">Experiment Setup</h3>
+    <ul class="tight">
+      <li><b>(Dataset)</b> LJPIV-CAIL / ELAM — synthetic innocence via counterfactual rewriting.</li>
+      <li><b>(Backbone)</b> Qwen-2.5-7B, Llama-3.1-8B, Gemma-2-9B</li>
+    </ul>
+
+    <div class="stats">
+      <div class="stat"><div class="v"><s>82.93%</s> → 16.69%</div><div class="l">FGR on Natural Innocent<br>(fine-tuned SOTA → OBJECTION)</div></div>
+      <div class="stat"><div class="v">0.76</div><div class="l">Best Macro-F1 on Natural Innocent</div></div>
+      <div class="stat"><div class="v">4.42<s> / 5</s></div><div class="l">Human expert evaluation<br>(Debate-Feedback: 2.87)</div></div>
+    </div>
+
+
+    <h3>Experiment 1: Structure alone is not enough</h3>
+    <div class="tbl">
+      <table class="res" style="max-width:520px">
+        <thead>
+          <tr><th>Method</th><th>Macro-F1↑</th><th>FGR↓</th></tr>
+          <tr style="display:none"><th></th></tr>
+        </thead>
+        <tbody>
+          <tr><td>(A) Plain LLM</td><td>0.48</td><td>29.64</td></tr>
+          <tr><td>(B) Schema</td><td>0.60</td><td>56.07</td></tr>
+          <tr><td>(C) Naive Tri.</td><td>0.47</td><td>17.86</td></tr>
+          <tr><td>(D) Schema+Tri.</td><td>0.70</td><td>53.21</td></tr>
+          <tr class="ours"><td>(D) + Lawyer (Ours)</td><td>0.78</td><td>10.71</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tnote">Qwen-2.5-7B on LJPIV-CAIL.</p>
+    <p class="takeaway">Structure improved accuracy,<br>but not fairness — <i>The lawyer does.</i></p>
+
+    <h3>Experiment 2: Main Results (Qwen-2.5-7B)</h3>
+    <div class="tbl">
+      <table class="res">
+        <thead>
+          <tr><th rowspan="2" style="vertical-align:bottom">Method</th><th colspan="2" class="grp">LJPIV-CAIL</th><th colspan="2" class="grp">LJPIV-ELAM</th><th colspan="2" class="grp nat">Natural Innocent</th></tr>
+          <tr><th>Macro-F1↑</th><th>FGR↓</th><th>Macro-F1↑</th><th>FGR↓</th><th class="nat">Macro-F1↑</th><th class="nat">FGR↓</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>LJPIV<sup>†</sup></td><td><b>0.82</b></td><td><b>9.29</b></td><td>0.74</td><td>47.60</td><td class="nat">0.32</td><td class="nat">82.93</td></tr>
+          <tr><td>Self-Refine</td><td>0.71</td><td>49.29</td><td>0.67</td><td>57.60</td><td class="nat">0.40</td><td class="nat">86.28</td></tr>
+          <tr><td>Debate-Feedback</td><td>0.75</td><td>22.14</td><td>0.77</td><td>27.00</td><td class="nat">0.72</td><td class="nat">42.95</td></tr>
+          <tr class="ours"><td>OBJECTION (Ours)</td><td style="font-weight:400">0.78</td><td style="font-weight:400">10.71</td><td><b>0.78</b></td><td><b>23.20</b></td><td class="nat"><b>0.76</b></td><td class="nat"><b>16.69</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tnote"><sup>†</sup>Fine-tuned on LJPIV-CAIL (in-domain); ELAM and Natural Innocent are out-of-domain.</p>
+    <ul class="tight"><li>Consistent trends across Llama-3.1 &amp; Gemma-2; full results in paper.</li></ul>
+
+    <h3>Further Analysis</h3>
+    <div class="analysis">
+      <div>
+        <b>1. Prediction distribution</b>
+        <figure><img src="static/images/distribution.png" alt="Prediction distributions on Natural Innocent and ELAM"></figure>
+        <ul class="tight">
+          <li>Baselines collapse to <b>Guilty</b>; OBJECTION matches the GOLD distribution.</li>
+          <li>Not guessing innocence, <b>identifying the correct acquittal ground.</b></li>
+        </ul>
+      </div>
+      <div>
+        <b>2. Human expert evaluation ($N=50$)</b>
+        <p class="fine" style="margin:4px 0 0">Blind 5-point Likert by active police investigators</p>
+        <div class="tbl">
+          <table class="res">
+            <thead>
+              <tr><th>Criterion</th><th>Debate-Feedback</th><th>OBJECTION (Ours)</th></tr>
+              <tr style="display:none"><th></th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Legal Relevance</td><td>2.64</td><td><b>4.16</b></td></tr>
+              <tr><td>Argument Strength</td><td>2.88</td><td><b>4.52</b></td></tr>
+              <tr><td>Factual Grounding</td><td>3.64</td><td><b>4.86</b></td></tr>
+              <tr><td>Human Similarity</td><td>2.32</td><td><b>4.12</b></td></tr>
+              <tr class="ours"><td>Average</td><td style="font-weight:400">2.87</td><td>4.42</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul class="tight fine">
+          <li><b>Relevance:</b> legal validity</li>
+          <li><b>Strength:</b> persuasiveness</li>
+          <li><b>Grounding:</b> anchoring to input facts</li>
+          <li><b>Similarity:</b> resemblance to a professional legal opinion</li>
+        </ul>
+        <ul class="tight">
+          <li>OBJECTION outperforms on <b>all four criteria</b></li>
+          <li>Largest gap in Similarity (2.32 → 4.12)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Conclusion</h2>
+    <ul class="contrib">
+      <li><b>Quantifying guilty bias.</b> Using normative metrics such as FGR, we show that prior LJP models (even fine-tuned SOTA) are systematically inclined toward guilty predictions.</li>
+      <li><b>OBJECTION: adversarial inference without extra training.</b> A Lawyer Agent at each step of the 3-step reasoning neutralizes bias, reducing FGR from 82.93% → 16.69% on real-world cases while achieving the best Macro-F1 out of domain.</li>
+      <li><b>Natural Innocent dataset.</b> 3.4k real-world Korean judgments that expose the limits of synthetic innocence benchmarks.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>BibTeX</h2>
+<pre><button class="copy" onclick="copyBib(this)">Copy</button><code id="bib">@article{jeong2026objection,
+  title   = {OBJECTION! Lawyer Agents Mitigate Guilty Bias in Legal Judgment Prediction},
+  author  = {Jeong, Jaehoon and Lee, Jay-Yoon},
+  journal = {arXiv preprint arXiv:2609.02158},
+  year    = {2026}
+}</code></pre>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    Contact: Jaehoon Jeong (<a href="mailto:20210042@snu.ac.kr">20210042@snu.ac.kr</a>) · Jay-Yoon Lee (<a href="mailto:lee.jayyoon@snu.ac.kr">lee.jayyoon@snu.ac.kr</a>)
+  </div>
+</footer>
+
+<script>
+function copyBib(btn){
+  var t=document.getElementById('bib').innerText;
+  try{
+    navigator.clipboard.writeText(t).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1500)});
+  }catch(e){}
+}
+</script>
+</body>
+</html>
