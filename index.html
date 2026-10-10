@@ -46,7 +46,7 @@ img{max-width:100%;display:block}
 .btn:hover{background:#000}
 .btn svg{width:17px;height:17px;fill:currentColor}
 .btn .hf{font-size:18px;line-height:1}
-        
+
 /* ---------- Sections ---------- */
 section{padding:44px 0 8px}
 h2{font-size:27px;font-weight:800;text-align:center;margin:0 0 22px;color:var(--navy)}
@@ -62,7 +62,8 @@ mark{background:var(--highlight);color:inherit;padding:0 3px;border-radius:3px}
 figure{margin:22px 0 10px}
 figure img{border-radius:10px;border:1px solid var(--line);margin:0 auto}
 figcaption{font-size:14.5px;color:var(--muted);margin-top:10px;line-height:1.55}
-figure.narrow img{max-width:520px}
+figure.narrow img{max-width:min(620px,100%)}
+figcaption .credit{display:block;margin-top:4px;font-size:13px}
 
 /* quote */
 .quote{font-family:"Noto Serif",serif;font-style:italic;font-size:22px;text-align:center;margin:8px auto 4px;max-width:760px}
@@ -75,8 +76,27 @@ figure.narrow img{max-width:520px}
 .vs small{display:block;color:var(--muted);font-size:13.5px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
 .vs strong{font-size:21px}
 .vs .llm strong{color:var(--red)}
+.vs .latin{display:block;margin-top:4px;font-family:"Noto Serif",serif;font-size:16px;color:var(--navy-2)}
 
 .def{border:1px solid var(--line);border-radius:12px;padding:14px 20px;background:#fff}
+/* confusion matrix */
+.cm{display:grid;grid-template-columns:96px 1fr 1fr;gap:8px;max-width:780px;margin:4px auto 0}
+.cm-corner{}
+.cm-col,.cm-row{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font-size:14px;color:var(--muted);line-height:1.35}
+.cm-col{padding:4px 0 2px}
+.cm-col b,.cm-row b{color:var(--ink);font-size:15.5px}
+.cm-cell{position:relative;border-radius:12px;padding:16px 18px;min-height:96px}
+.cm-tag{position:absolute;top:10px;right:12px;font-size:12px;font-weight:700;letter-spacing:.5px;opacity:.7}
+.cm-ok{background:var(--soft);display:flex;align-items:center;justify-content:center}
+.cm-ok .cm-tag{position:static;color:var(--muted);font-size:14px}
+.cm-fgr{background:#FBE3E5;border:2px solid #C0313B}
+.cm-fgr .cm-name,.cm-fgr .cm-tag{color:#A3202A}
+.cm-fnr{background:#E3ECFB;border:2px solid #2F5BB7}
+.cm-fnr .cm-name,.cm-fnr .cm-tag{color:#1F4597}
+.cm-name{font-weight:800;font-size:16.5px;margin-bottom:6px;padding-right:28px}
+.cm-def{font-size:14.5px;line-height:1.5;color:#2a2f3a}
+.cm-quote{margin-top:10px;font-family:"Noto Serif",serif;font-style:italic;font-size:15px;color:#2a2f3a}
+
 
 /* steps */
 .steps{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:18px 0}
@@ -150,6 +170,12 @@ pre{position:relative;background:#1C1F27;color:#E6E8EE;border-radius:12px;paddin
 footer{margin-top:48px;padding:26px 0 40px;border-top:1px solid var(--line);text-align:center;font-size:14px;color:var(--muted)}
 
 @media (max-width:760px){
+  .cm{grid-template-columns:64px 1fr 1fr;gap:6px}
+  .cm-cell{padding:12px 10px;min-height:72px}
+  .cm-name{font-size:14px;padding-right:20px}
+  .cm-def,.cm-quote{font-size:12.5px}
+  .cm-col,.cm-row{font-size:12px}
+  .cm-col b,.cm-row b{font-size:13px}
   body{font-size:16px}
   .hero{padding:40px 0 34px}
   .hero .logo span{font-size:36px}
@@ -189,23 +215,15 @@ footer{margin-top:48px;padding:26px 0 40px;border-top:1px solid var(--line);text
 <main class="wrap">
 
 
-  <section>
-    <h2>Abstract</h2>
-    <div class="abstract">
-      <p>Legal Judgment Prediction (LJP) models are typically trained on documents that describe facts from a prosecutorial perspective. Existing datasets further exhibit severe label imbalance toward guilty outcomes. Consequently, these models suffer from &ldquo;Guilty Bias&rdquo;, blindly accepting the prosecution&rsquo;s narrative as objective truth. Previous studies employing three-step reasoning structures or training on synthetically generated innocence data improve overall accuracy, but they still fail to mitigate bias at inference time.</p>
-      <p>In this paper, we introduce OBJECTION, an inference-time pipeline that integrates an Adversarial Lawyer Agent into each 3-step reasoning of offense, unlawfulness, and culpability. Unlike generic critics, our agent actively challenges the model&rsquo;s presumptions of guilt by injecting legal defense arguments at each reasoning stage. To thoroughly evaluate this, we present a new &ldquo;Natural Innocent&rdquo; dataset including 3.4k real-world cases, overcoming the limitations of synthetic innocence benchmarks. Test results show that OBJECTION drastically reduces the False Guilty Rate (FGR) from 82.93% (SOTA baseline) to 16.69%, proving its capability to perform substantive legal reasoning. This work denotes a key progress toward aligning Legal AI with the presumption of innocence, a universally recognized principle enshrined in modern criminal law.</p>
-    </div>
-  </section>
+  <div class="tldr">
+    <b>TL;DR</b>&nbsp; OBJECTION is a training-free framework mitigating LLM guilty bias in Legal Judgment Prediction. An adversarial Lawyer Agent injects reasonable doubt, evaluated on Natural Innocent, a new dataset of real-world acquittal cases.
+  </div>
 
   <section>
     <h2>Guilty-biased LLMs (Introduction)</h2>
     <h3>Criminal procedure is not neutral by design</h3>
     <p class="lead">Fact descriptions in criminal judgments are not neutral event summaries, <mark>but prosecutorial narratives written to justify guilt.</mark></p>
     <p>Public legal corpora for LJP consist of exactly this content, with severe label imbalance toward guilty outcomes. As a result, LJP models are inherently biased: they accept the prosecution's narrative as objective truth — <b>the Guilty Bias.</b></p>
-    <figure>
-      <img src="static/images/fig1_overview.png" alt="Comparative overview of LJP paradigms: existing methods (A)-(D) versus OBJECTION (II)">
-      <figcaption>Comparative overview of LJP paradigms. FGR(↓) and FNR(↓) denote False Guilty Rate and False Not-Guilty Rate, respectively. Green arrow denotes improvements, while the reds denote degradations. Existing methods (A)–(D) suffer from guilty bias from fixed architectures. In contrast, (II) OBJECTION (Ours) employs a Lawyer Agent to actively dispute assumptions, efficiently mitigating bias while maintaining reasoning quality. The further reasoning round (e.g., Round 3) is skipped when a former legal doubt (e.g., Self-defense in Round 2) is established.</figcaption>
-    </figure>
   </section>
 
   <section>
@@ -214,19 +232,50 @@ footer{margin-top:48px;padding:26px 0 40px;border-top:1px solid var(--line);text
     <p class="quote-by">— W. Blackstone</p>
     <h3>Presumption of Innocence</h3>
     <div class="vs">
-      <div class="human"><small>Human expert</small><strong>&ldquo;When in doubt, acquit.&rdquo;</strong></div>
+      <div class="human"><small>Human expert</small><strong>&ldquo;When in doubt, acquit.&rdquo;</strong><span class="latin"><i>In Dubio Pro Reo</i></span></div>
       <div class="llm"><small>Guilty-biased LLM</small><strong>&ldquo;When in doubt, convict.&rdquo;</strong> — <mark>Exactly the opposite.</mark></div>
     </div>
     <h3>Bias Metric</h3>
-    <div class="def">
-      <ul class="tight" style="margin:0"><li>False Guilty Rate (FGR) $= FP/(TN+FP)$: The rate at which the innocent are declared guilty.</li><li>On real-world acquittal cases, even a fine-tuned SOTA model reaches an <mark>FGR of 82.93%.</mark></li></ul>
+    <div class="cm">
+      <div class="cm-corner"></div>
+      <div class="cm-col">Predicted<br><b>Guilty</b></div>
+      <div class="cm-col">Predicted<br><b>Not Guilty</b></div>
+
+      <div class="cm-row">Actually<br><b>Innocent</b></div>
+      <div class="cm-cell cm-fgr">
+        <span class="cm-tag">FP</span>
+        <div class="cm-name">False Guilty Rate (FGR)</div>
+        <div class="cm-def">The ratio of innocent cases predicted as guilty ($FP/(TN+FP)$). A high FGR indicates a violation of the presumption of innocence.</div>
+        <div class="cm-quote">&ldquo;&hellip; than that one innocent suffer.&rdquo;</div>
+      </div>
+      <div class="cm-cell cm-ok"><span class="cm-tag">TN</span></div>
+
+      <div class="cm-row">Actually<br><b>Guilty</b></div>
+      <div class="cm-cell cm-ok"><span class="cm-tag">TP</span></div>
+      <div class="cm-cell cm-fnr">
+        <span class="cm-tag">FN</span>
+        <div class="cm-name">False Not-Guilty Rate (FNR)</div>
+        <div class="cm-def">The ratio of guilty cases predicted as innocent ($FN/(TP+FN)$).</div>
+        <div class="cm-quote">&ldquo;&hellip; ten guilty persons escape &hellip;&rdquo;</div>
+      </div>
     </div>
+    <div class="def" style="margin-top:14px">
+      <ul class="tight" style="margin:0"><li>On real-world acquittal cases, even a fine-tuned SOTA model reaches an <mark>FGR of 82.93%.</mark></li></ul>
+    </div>
+    <figure>
+      <img src="static/images/fig1_overview.png" alt="Comparative overview of LJP paradigms: existing methods (A)-(D) versus OBJECTION (II)">
+      <figcaption>Comparative overview of LJP paradigms. FGR(↓) and FNR(↓) denote False Guilty Rate and False Not-Guilty Rate, respectively. Green arrow denotes improvements, while the reds denote degradations. Existing methods (A)–(D) suffer from guilty bias from fixed architectures. In contrast, (II) OBJECTION (Ours) employs a Lawyer Agent to actively dispute assumptions, efficiently mitigating bias while maintaining reasoning quality. The further reasoning round (e.g., Round 3) is skipped when a former legal doubt (e.g., Self-defense in Round 2) is established.</figcaption>
+    </figure>
   </section>
 
   <section>
     <h2>About OBJECTION! (Methodology)</h2>
     <h3>Detail of the Pipeline</h3>
     <p><b>Inference-time</b> — a single LLM plays two roles: Judge ($\mathcal{M}$) and Lawyer ($\mathcal{A}$).</p>
+    <figure class="narrow">
+      <img src="static/images/ljpiv_trichotomy.png" alt="Trichotomous dogmatics of criminal law: elements of the offense, unlawfulness, culpability">
+      <figcaption>An illustration of trichotomous dogmatics of criminal law. The reasoning process proceeds sequentially from top to bottom. Conduct that satisfies the elements of the offense, unlawfulness, and culpability is deemed to constitute a crime; otherwise, the individual is considered innocent.<br><span class="credit">Figure from <a href="https://aclanthology.org/2025.findings-emnlp.95/" target="_blank" rel="noopener">Zhang et al. (2025), Beyond Guilt: Legal Judgment Prediction with Trichotomous Reasoning</a>, licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.</span></figcaption>
+    </figure>
     <figure>
       <img src="static/images/fig2_pipeline.png" alt="Detailed decision flow of the OBJECTION pipeline on a self-defense case">
       <figcaption>Detailed decision flow of the OBJECTION pipeline, illustrated with a self-defense case. The Lawyer Agent overturns the initial biased judgment in Round 2 by highlighting exculpatory details (e.g., imminence), triggering the early-exit mechanism for acquittal. This adversarial intervention effectively neutralizes narrative bias, reducing the False Guilty Rate (FGR) from 82.93% to 16.69% on the Natural Innocent dataset.</figcaption>
