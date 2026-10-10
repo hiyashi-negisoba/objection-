@@ -64,6 +64,17 @@ figure img{border-radius:10px;border:1px solid var(--line);margin:0 auto}
 figcaption{font-size:14.5px;color:var(--muted);margin-top:10px;line-height:1.55}
 figure.narrow img{max-width:min(620px,100%)}
 figcaption .credit{display:block;margin-top:4px;font-size:13px}
+figure.plain img{border:none;border-radius:0;max-width:min(860px,100%)}
+/* tooltip */
+.tip{border-bottom:1.5px dotted var(--navy-2);cursor:help;position:relative;outline:none}
+.tip::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);width:max-content;max-width:min(260px,70vw);background:#1C1F27;color:#fff;font-size:13px;line-height:1.45;padding:8px 11px;border-radius:8px;pointer-events:none;z-index:5;white-space:normal;display:none}
+.tip:hover::after,.tip:focus::after{display:block}
+/* lightbox */
+main figure img{cursor:zoom-in}
+.lb{position:fixed;inset:0;background:rgba(10,14,30,.88);display:none;align-items:center;justify-content:center;z-index:50;padding:24px;cursor:zoom-out}
+.lb.on{display:flex}
+.lb img{max-width:100%;max-height:100%;width:auto;height:auto;border-radius:8px;background:#fff}
+
 
 /* quote */
 .quote{font-family:"Noto Serif",serif;font-style:italic;font-size:22px;text-align:center;margin:8px auto 4px;max-width:760px}
@@ -224,6 +235,7 @@ footer{margin-top:48px;padding:26px 0 40px;border-top:1px solid var(--line);text
     <h3>Criminal procedure is not neutral by design</h3>
     <p class="lead">Fact descriptions in criminal judgments are not neutral event summaries, <mark>but prosecutorial narratives written to justify guilt.</mark></p>
     <p>Public legal corpora for LJP consist of exactly this content, with severe label imbalance toward guilty outcomes. As a result, LJP models are inherently biased: they accept the prosecution's narrative as objective truth — <b>the Guilty Bias.</b></p>
+    <figure class="plain"><img src="static/images/intro_problem.png" alt="Fact description from criminal judgments and a guilty-biased LLM make innocent persons guilty"></figure>
   </section>
 
   <section>
@@ -282,7 +294,7 @@ footer{margin-top:48px;padding:26px 0 40px;border-top:1px solid var(--line);text
     </figure>
 
     <div class="steps">
-      <div class="step"><span class="num">Step 1</span><h4>Input decomposition as a schema (Schema-based IE)</h4><p>Subject, Object, Actus Reus, Mens Rea as a structured factual anchor.</p></div>
+      <div class="step"><span class="num">Step 1</span><h4>Input decomposition as a schema (Schema-based IE)</h4><p>Subject, Object, <span class="tip" tabindex="0" data-tip="The strictly objective physical conduct itself and its consequences.">Actus Reus</span>, <span class="tip" tabindex="0" data-tip="The subjective elements inferred from the context, rather than just explicit intent.">Mens Rea</span> as a structured factual anchor.</p></div>
       <div class="step"><span class="num">Step 2</span><h4>3-Step Reasoning</h4><p>Offense → Unlawfulness → Culpability</p></div>
       <div class="step"><span class="num">Step 2-1</span><h4>Adversarial Lawyer Agent</h4><p>At each step, the Judge's initial judgment is challenged with defense arguments<br>The Judge must re-evaluate conditioned on them.</p></div>
       <div class="step"><span class="num">Step 3</span><h4>Early Exit</h4><p>Once a stage is negated, the case is acquitted immediately with a granular label.<br>(e.g., Innocent by Unlawfulness)</p></div>
@@ -377,6 +389,7 @@ footer{margin-top:48px;padding:26px 0 40px;border-top:1px solid var(--line);text
       </table>
     </div>
     <p class="tnote"><sup>†</sup>Fine-tuned on LJPIV-CAIL (in-domain); ELAM and Natural Innocent are out-of-domain.</p>
+    <p class="tnote"><b>LJPIV</b> (fine-tuned SOTA, in-domain upper bound) · <b>Self-Refine</b> (generic critic without legal persona) · <b>Debate-Feedback</b> (round-table debate via stochastic sampling)</p>
     <ul class="tight"><li>Consistent trends across Llama-3.1 &amp; Gemma-2; full results in paper.</li></ul>
 
     <h3>Further Analysis</h3>
@@ -386,6 +399,7 @@ footer{margin-top:48px;padding:26px 0 40px;border-top:1px solid var(--line);text
         <figure><img src="static/images/distribution.png" alt="Prediction distributions on Natural Innocent and ELAM"></figure>
         <ul class="tight">
           <li>Baselines collapse to <b>Guilty</b>; OBJECTION matches the GOLD distribution.</li>
+          <li class="fine">GOLD: gold-standard (ground-truth) label distribution</li>
           <li>Not guessing innocence, <b>identifying the correct acquittal ground.</b></li>
         </ul>
       </div>
@@ -455,6 +469,19 @@ function copyBib(btn){
     navigator.clipboard.writeText(t).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1500)});
   }catch(e){}
 }
+</script>
+
+<div class="lb" id="lb" role="dialog" aria-label="Enlarged figure"><img alt=""></div>
+<script>
+(function(){
+  var lb=document.getElementById('lb'), im=lb.querySelector('img');
+  document.querySelectorAll('main figure img').forEach(function(el){
+    el.addEventListener('click',function(){ im.src=el.src; im.alt=el.alt; lb.classList.add('on'); });
+  });
+  function close(){ lb.classList.remove('on'); im.removeAttribute('src'); }
+  lb.addEventListener('click',close);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+})();
 </script>
 </body>
 </html>
